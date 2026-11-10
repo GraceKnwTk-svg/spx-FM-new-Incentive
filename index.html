@@ -3,111 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณค่าคอมมิชชันโครงสร้างใหม่</title>
-    <script src="https://tailwindcss.com"></script>
+    <title>SPX FM Payout Calculator (โครงสร้างใหม่)</title>
+    <link href="https://cloudflare.com" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .bg-orange { background-color: #e65100; color: white; }
+        .text-orange { color: #e65100; }
+        .table-responsive { background: white; border-radius: 8px; padding: 10px; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md my-4">
-        <h1 class="text-xl font-bold text-center text-orange-600 mb-2">📊 คำนวณค่าคอมแบบแจกแจงละเอียด</h1>
-        <p class="text-xs text-center text-gray-500 mb-6 font-semibold">ของ ABYAI-B #Sup Grace (โครงสร้างใหม่)</p>
-        
-        <!-- ส่วนที่ 1: กรอกจำนวนพัสดุสำเร็จ -->
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">จำนวนพัสดุรวมสำเร็จ (ต่อวัน)</label>
-            <input type="number" id="parcelsCount" min="0" value="0" placeholder="ระบุจำนวนชิ้น เช่น 258" class="w-full p-3 border rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-lg text-center">
-        </div>
+<div class="container py-4">
+    <!-- หัวข้อโปรแกรม -->
+    <div class="card bg-orange text-center p-3 mb-4">
+        <h2 class="mb-1">📦 ระบบคำนวณค่าตอบแทน FM รูปแบบใหม่ #By Sup Grace</h2>
+        <small>เปรียบเทียบค่าตอบแทนตามจริง กับ ค่าการันตีขั้นต่ำต่อ Stop อัตโนมัติ (T1 - T10)</small>
+    </div>
 
-        <!-- ส่วนที่ 2: หักงานซ้ำ Same Address -->
-        <div class="mb-6 p-4 bg-red-50 rounded-xl border border-red-100">
-            <h3 class="font-bold text-red-700 text-xs mb-1">🏠 กรณีส่งพัสดุหลายชิ้นในที่อยู่เดียวกัน</h3>
-            <p class="text-[10px] text-red-500 mb-3">* หักชิ้นที่ 2 เป็นต้นไปในบ้านหลังนั้น (รถ 4W หักชิ้นละ 2.5 บาท)</p>
-            <div>
-                <label class="block text-gray-600 text-xs font-bold mb-1">จำนวนชิ้นที่โดนหักลบรวม (กล่องซ้ำ)</label>
-                <input type="number" id="sameAddressDeduct" min="0" value="0" placeholder="ถ้าไม่มีกรอก 0" class="w-full p-2 border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-red-400 text-center">
+    <div class="row g-4">
+        <!-- ฝั่งกรอกข้อมูล -->
+        <div class="col-md-5">
+            <div class="card p-4">
+                <h4 class="mb-3 text-orange">1. กรอกข้อมูลการวิ่งงาน</h4>
+                
+                <div class="mb-3">
+                    <label class="form-label">เลือกระดับ Tier:</label>
+                    <select id="tierSelect" class="form-select">
+                        <!-- ตัวเลือก T1 ถึง T10 โดยเปิดค่าเริ่มต้นไว้ที่ T5 -->
+                        <option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option><option value="T4">T4</option>
+                        <option value="T5" selected>T5</option>
+                        <option value="T6">T6</option><option value="T7">T7</option><option value="T8">T8</option><option value="T9">T9</option><option value="T10">T10</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ชื่อร้านค้า / รหัส Stop (ระบุหรือไม่ก็ได้):</label>
+                    <input type="text" id="stopName" class="form-control" placeholder="เช่น ร้าน A, จุดที่ 1">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">จำนวนพัสดุที่รับจริง (ชิ้น) *:</label>
+                    <input type="number" id="parcels" class="form-control" value="1" min="1">
+                </div>
+
+                <button onclick="calculatePayout()" class="btn btn-success w-100 py-2 font-weight-bold">คำนวณและบันทึกจุดนี้</button>
             </div>
         </div>
 
-        <!-- ปุ่มคำนวณ -->
-        <button onclick="calculateNewStructure()" class="w-full bg-orange-500 text-white font-bold p-3 rounded-xl hover:bg-orange-600 transition shadow-md">
-            คำนวณตามโครงสร้างใหม่
-        </button>
-
-        <!-- ส่วนที่ 3: แสดงผลลัพธ์การคำนวณ -->
-        <div class="mt-6 hidden" id="resultContainer">
-            <div class="grid grid-cols-3 gap-2 text-center text-xs mb-4">
-                <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
-                    <p class="text-gray-500 font-medium">ค่ากล่องโครงสร้างใหม่</p>
-                    <p class="text-base font-bold text-blue-600 mt-1"><span id="grossIncome">0</span> บ.</p>
-                </div>
-                <div class="p-3 bg-red-50 rounded-xl border border-red-200">
-                    <p class="text-gray-500 font-medium">หักงานซ้ำ (Same)</p>
-                    <p class="text-base font-bold text-red-600 mt-1"><span id="deductAmount">0</span> บ.</p>
-                </div>
-                <div class="p-3 bg-green-50 rounded-xl border border-green-200">
-                    <p class="text-gray-500 font-medium">สุทธิที่ได้รับ</p>
-                    <p class="text-lg font-extrabold text-green-600 mt-1"><span id="netIncome">0</span> บ.</p>
-                </div>
-            </div>
-            
-            <!-- แจกแจงวิธีคิด -->
-            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs">
-                <h3 class="font-bold text-gray-700 text-sm mb-3">📄 วิธีคำนวณแจกแจงตามตารางใหม่</h3>
-                <div id="breakdownText" class="space-y-2 text-gray-600 leading-relaxed">
-                    <!-- ข้อความรายละเอียดจะแสดงตรงนี้ -->
+        <!-- ฝั่งแสดงผลลัพธ์ย่อย -->
+        <div class="col-md-7">
+            <div class="card p-4 bg-white h-100">
+                <h4 class="mb-3 text-secondary">2. รายละเอียดราคาของจุดล่าสุด</h4>
+                <div class="row text-center my-auto">
+                    <div class="col-6 mb-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">เรทราคาต่อชิ้น</small>
+                            <span id="rateVal" class="fs-4 fw-bold">-</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">คำนวณตามจริง (ชิ้น x เรท)</small>
+                            <span id="calcVal" class="fs-4 fw-bold">-</span>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">ค่าการันตีขั้นต่ำของสลอตนี้</small>
+                            <span id="minVal" class="fs-4 fw-bold">-</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="p-3 border rounded bg-success bg-opacity-10 border-success">
+                            <h5 class="text-success mb-1">สุทธิระบบเลือกจ่ายจริง (เลือกค่าที่สูงกว่า)</h5>
+                            <span id="finalVal" class="fs-2 fw-bold text-success">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function calculateNewStructure() {
-            const parcels = parseInt(document.getElementById('parcelsCount').value) || 0;
-            const deductCount = parseInt(document.getElementById('sameAddressDeduct').value) || 0;
-            
-            let ratePerParcel = 0;
-            let stepLabel = "";
+    <!-- ตารางสรุปรวมสะสม -->
+    <div class="card p-4 mt-4">
+        <h4 class="mb-3 text-orange">📋 รายการสรุปสะสมรอบวิ่งรถ</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>รหัส Stop/ร้าน</th>
+                        <th>ระดับ Tier</th>
+                        <th>พัสดุ (ชิ้น)</th>
+                        <th>เรท/ชิ้น (บาท)</th>
+                        <th>คำนวณจริง (บาท)</th>
+                        <th>ขั้นต่ำ (บาท)</th>
+                        <th>จ่ายสุทธิ (บาท)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="7" class="text-muted py-3">ยังไม่มีข้อมูลการสะสมในตาราง กรุณากรอกข้อมูลด้านบน</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-            // ตรรกะตรวจจับเรทราคาตามจำนวนชิ้นจริงจากตาราง "โครงสร้างแบบใหม่"
-            if (parcels >= 1 && parcels <= 10) { ratePerParcel = 1.41; stepLabel = "1 - 10 ชิ้น"; }
-            else if (parcels >= 11 && parcels <= 15) { ratePerParcel = 1.41; stepLabel = "11 - 15 ชิ้น"; }
-            else if (parcels >= 16 && parcels <= 20) { ratePerParcel = 1.37; stepLabel = "16 - 20 ชิ้น"; }
-            else if (parcels >= 21 && parcels <= 25) { ratePerParcel = 1.29; stepLabel = "21 - 25 ชิ้น"; }
-            else if (parcels >= 26 && parcels <= 30) { ratePerParcel = 1.25; stepLabel = "26 - 30 ชิ้น"; }
-            else if (parcels >= 31 && parcels <= 40) { ratePerParcel = 1.09; stepLabel = "31 - 40 ชิ้น"; }
-            else if (parcels >= 41 && parcels <= 50) { ratePerParcel = 0.97; stepLabel = "41 - 50 ชิ้น"; }
-            else if (parcels >= 51 && parcels <= 75) { ratePerParcel = 0.89; stepLabel = "51 - 75 ชิ้น"; }
-            else if (parcels >= 76 && parcels <= 100) { ratePerParcel = 0.69; stepLabel = "76 - 100 ชิ้น"; }
-            else if (parcels >= 101 && parcels <= 200) { ratePerParcel = 0.58; stepLabel = "101 - 200 ชิ้น"; }
-            else if (parcels >= 201 && parcels <= 300) { ratePerParcel = 0.55; stepLabel = "201 - 300 ชิ้น"; }
-            else if (parcels >= 301 && parcels <= 400) { ratePerParcel = 0.48; stepLabel = "301 - 400 ชิ้น"; }
-            else if (parcels >= 401 && parcels <= 500) { ratePerParcel = 0.44; stepLabel = "401 - 500 ชิ้น"; }
-            else if (parcels >= 501 && parcels <= 1000) { ratePerParcel = 0.39; stepLabel = "501 - 1,000 ชิ้น"; }
-            else if (parcels >= 1001 && parcels <= 2000) { ratePerParcel = 0.29; stepLabel = "1,001 - 2,000 ชิ้น"; }
-            else if (parcels >= 2001 && parcels <= 3000) { ratePerParcel = 0.15; stepLabel = "2,001 - 3,000 ชิ้น"; }
-            else if (parcels >= 3001 && parcels <= 4000) { ratePerParcel = 0.15; stepLabel = "3,001 - 4,000 ชิ้น"; }
-            else if (parcels >= 4001 && parcels <= 5000) { ratePerParcel = 0.15; stepLabel = "4,001 - 5,000 ชิ้น"; }
-            else if (parcels >= 5001) { ratePerParcel = 0.15; stepLabel = "5,001 ชิ้นขึ้นไป"; }
+        <!-- แผงสรุปยอดสุทธิท้ายหน้าเว็บ -->
+        <div id="summaryPanel" class="alert alert-secondary mt-3 mb-0 text-center fw-bold fs-5" style="display:none;">
+            สรุปรวมรอบงานคิวนี้ -> ทั้งหมด: <span id="totalStops" class="text-primary">0</span> Stops | 
+            พัสดุรวม: <span id="totalParcels" class="text-primary">0</span> ชิ้น | 
+            รายได้รวมทั้งหมด: <span id="totalMoney" class="text-success">0.00</span> บาท
+            <div class="mt-2">
+                <button onclick="clearAll()" class="btn btn-sm btn-danger">ล้างตารางเริ่มรอบใหม่</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            let grossIncome = parcels * ratePerParcel;
-            let deductAmount = deductCount * 2.5; // คิดอัตราหัก 2.5 บาท สำหรับ 4W
-            let netIncome = Math.max(0, grossIncome - deductAmount);
+<script>
+// ข้อมูลโครงสร้างแบบใหม่ทั้งหมดตามภาพที่ 1 (T1 ถึง T10)
+const PRICING_DATA = {
+    T1: [1.41,1.37,1.26,1.25,1.00,0.97,0.69,0.69,0.55,0.48,0.44,0.39,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
+    T2: [1.58,1.54,1.38,1.33,1.07,1.01,0.74,0.75,0.58,0.49,0.47,0.40,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
+    T3: [1.75,1.76,1.56,1.47,1.14,1.10,0.78,0.81,0.63,0.50,0.48,0.43,0.38,0.21,0.17,0.17,0.17,0.17,0.17],
+    T4: [1.92,1.88,1.73,1.60,1.20,1.20,0.87,0.86,0.68,0.51,0.49,0.47,0.39,0.21,0.17,0.17,0.17,0.17,0.17],
+    T5: [2.08,2.01,1.90,1.68,1.46,1.29,1.01,0.92,0.70,0.55,0.53,0.51,0.39,0.22,0.18,0.18,0.18,0.18,0.18],
+    T6: [2.75,2.57,2.25,1.96,1.59,1.47,1.06,1.04,0.79,0.60,0.57,0.55,0.40,0.22,0.18,0.18,0.18,0.18,0.18],
+    T7: [3.33,3.00,2.59,2.31,1.82,1.66,1.15,1.15,0.86,0.66,0.60,0.60,0.43,0.23,0.18,0.18,0.18,0.18,0.18],
+    T8: [3.74,3.42,2.94,2.67,2.05,1.84,1.29,1.27,0.94,0.70,0.64,0.64,0.44,0.23,0.20,0.20,0.20,0.20,0.20],
+    T9: [4.41,3.85,3.29,2.93,2.28,2.02,1.38,1.38,1.01,0.75,0.68,0.68,0.46,0.25,0.20,0.20,0.20,0.20,0.20],
+    T10:[4.41,4.28,3.63,3.19,2.50,2.21,1.66,1.61,1.18,0.83,0.69,0.69,0.49,0.25,0.21,0.21,0.21,0.21,0.21]
+};
 
-            let breakdownHtml = `
-                <p>• <strong>จำนวนพัสดุสำเร็จ:</strong> ${parcels} ชิ้น</p>
-                <p>• <strong>ช่วงจำนวน (Step size):</strong> ตกอยู่ตารางขั้น ${stepLabel}</p>
-                <p>• <strong>เรทจ่ายโครงสร้างใหม่:</strong> ชิ้นละ ${ratePerParcel} บาท</p>
-                <p class="text-blue-600 font-semibold">• <strong>สูตรคำนวณค่ากล่อง:</strong> ${ratePerParcel} × ${parcels} ชิ้น = ${grossIncome.toFixed(2)} บาท</p>
-                <p class="text-red-500 font-semibold">• <strong>หักงานซ้ำ Same Address:</strong> ${deductCount} ชิ้น × 2.5 บาท = -${deductAmount.toFixed(2)} บาท</p>
-                <p class="text-green-600 font-bold border-t pt-2 mt-1 text-sm text-right">สุทธิที่ได้รับจริง: ${netIncome.toFixed(2)} บาท</p>
-            `;
+const MIN_GUARANTEED_DATA = {
+    T1:,
+    T2:,
+    T3:,
+    T4:,
+    T5:,
+    T6:,
+    T7:,
+    T8:,
+    T9:,
+    T10:[47,49,68,86,91,96,100,110,124,161,235,248,276,345,494,500,630,840,1050]
+};
 
-            document.getElementById('grossIncome').innerText = grossIncome.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('deductAmount').innerText = deductAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('netIncome').innerText = netTotal = netIncome.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('breakdownText').innerHTML = breakdownHtml;
-            document.getElementById('resultContainer').classList.remove('hidden');
-        }
-    </script>
-</body>
-</html>
+const BINS = [
+    {min:1, max:10}, {min:11, max:15}, {min:16, max:20}, {min:21, max:25}, {min:26, max:30},
+    {min:31, max:40}, {min:41, max:50}, {min:51, max:75}, {min:76, max:100}, {min:101, max:200},
+    {min:201, max:300}, {min:301, max:400}, {min:401, max:500}, {min:501, max:1000},
+    {min:1001, max:2000}, {min:2001, max:3000}, {min:3001, max:4000}, {min:4001, max:5000}, {min:5001, max:10000}
+];
+
+let historyData = [];
+
+function calculatePayout() {
+    const tier = document.getElementById("tierSelect").value;
+    const stopNameInput = document.getElementById("stopName").value.trim();
+    const parcels = parseInt(document.getElementById("parcels").value);
+
+    if (isNaN(parcels) || parcels <= 0) {
+        alert("กรุณากรอกจำนวนพัสดุให้ถูกต้องและมีค่ามากกว่า 0");
+        return;
+    }
+
+    let idx = BINS.findIndex(b => parcels >= b.min && parcels <= b.max);
+    if (idx === -1) {
+        alert("จำนวนพัสดุเกินขอบเขตตาราง (สูงสุด 10,000 ชิ้น)");
+        return;
+    }
+
+    const rate = PRICING_DATA[tier][idx];
+    const minGuaranteed = MIN_GUARANTEED_DATA[tier][idx];
+    const calcPay = parcels * rate;
+    const finalPay = Math.max(calcPay, minGuaranteed);
+    const label = stopNameInput !== "" ? stopNameInput : `Stop ที่ ${historyData.length + 1}`;
+
+    // แสดงผลลัพธ์ย่อยของจุดล่าสุด
+    document.getElementById("rateVal").innerText = rate.toFixed(2) + " บาท";
+    document.getElementById("calcVal").innerText = calcPay.toFixed(2) + " บาท";
+    document.getElementById("minVal").innerText = minGuaranteed.toFixed(2) + " บาท";
+    document.getElementById("finalVal").innerText = finalPay.toFixed(2) + " บาท";
+
+    // บันทึกลงตารางสรุปสะสม
+    historyData.push({ label, tier, parcels, rate, calcPay, minGuaranteed, finalPay });
+    updateTable();
+
+    // ล้างกล่องอินพุตสำหรับรอบถัดไป
+    document.getElementById("stopName").value = "";
+    document.getElementById("parcels").value = "1";
+}
+
+function updateTable() {
+    const tbody = document.getElementById("tableBody");
+    if (historyData.length === 0) {
