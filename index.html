@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณค่าคอมมิชชันโครงสร้างใหม่</title>
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md my-4">
+        <h1 class="text-xl font-bold text-center text-orange-600 mb-2">📊 คำนวณค่าคอมแบบแจกแจงละเอียด</h1>
+        <p class="text-xs text-center text-gray-500 mb-6 font-semibold">ของ ABYAI-B #Sup Grace (โครงสร้างใหม่)</p>
+        
+        <!-- ส่วนที่ 1: กรอกจำนวนพัสดุสำเร็จ -->
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">จำนวนพัสดุรวมสำเร็จ (ต่อวัน)</label>
+            <input type="number" id="parcelsCount" min="0" value="0" placeholder="ระบุจำนวนชิ้น เช่น 258" class="w-full p-3 border rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold text-lg text-center">
+        </div>
+
+        <!-- ส่วนที่ 2: หักงานซ้ำ Same Address -->
+        <div class="mb-6 p-4 bg-red-50 rounded-xl border border-red-100">
+            <h3 class="font-bold text-red-700 text-xs mb-1">🏠 กรณีส่งพัสดุหลายชิ้นในที่อยู่เดียวกัน</h3>
+            <p class="text-[10px] text-red-500 mb-3">* หักชิ้นที่ 2 เป็นต้นไปในบ้านหลังนั้น (รถ 4W หักชิ้นละ 2.5 บาท)</p>
+            <div>
+                <label class="block text-gray-600 text-xs font-bold mb-1">จำนวนชิ้นที่โดนหักลบรวม (กล่องซ้ำ)</label>
+                <input type="number" id="sameAddressDeduct" min="0" value="0" placeholder="ถ้าไม่มีกรอก 0" class="w-full p-2 border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-red-400 text-center">
+            </div>
+        </div>
+
+        <!-- ปุ่มคำนวณ -->
+        <button onclick="calculateNewStructure()" class="w-full bg-orange-500 text-white font-bold p-3 rounded-xl hover:bg-orange-600 transition shadow-md">
+            คำนวณตามโครงสร้างใหม่
+        </button>
+
+        <!-- ส่วนที่ 3: แสดงผลลัพธ์การคำนวณ -->
+        <div class="mt-6 hidden" id="resultContainer">
+            <div class="grid grid-cols-3 gap-2 text-center text-xs mb-4">
+                <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                    <p class="text-gray-500 font-medium">ค่ากล่องโครงสร้างใหม่</p>
+                    <p class="text-base font-bold text-blue-600 mt-1"><span id="grossIncome">0</span> บ.</p>
+                </div>
+                <div class="p-3 bg-red-50 rounded-xl border border-red-200">
+                    <p class="text-gray-500 font-medium">หักงานซ้ำ (Same)</p>
+                    <p class="text-base font-bold text-red-600 mt-1"><span id="deductAmount">0</span> บ.</p>
+                </div>
+                <div class="p-3 bg-green-50 rounded-xl border border-green-200">
+                    <p class="text-gray-500 font-medium">สุทธิที่ได้รับ</p>
+                    <p class="text-lg font-extrabold text-green-600 mt-1"><span id="netIncome">0</span> บ.</p>
+                </div>
+            </div>
+            
+            <!-- แจกแจงวิธีคิด -->
+            <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+                <h3 class="font-bold text-gray-700 text-sm mb-3">📄 วิธีคำนวณแจกแจงตามตารางใหม่</h3>
+                <div id="breakdownText" class="space-y-2 text-gray-600 leading-relaxed">
+                    <!-- ข้อความรายละเอียดจะแสดงตรงนี้ -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateNewStructure() {
+            const parcels = parseInt(document.getElementById('parcelsCount').value) || 0;
+            const deductCount = parseInt(document.getElementById('sameAddressDeduct').value) || 0;
+            
+            let ratePerParcel = 0;
+            let stepLabel = "";
+
+            // ตรรกะตรวจจับเรทราคาตามจำนวนชิ้นจริงจากตาราง "โครงสร้างแบบใหม่"
+            if (parcels >= 1 && parcels <= 10) { ratePerParcel = 1.41; stepLabel = "1 - 10 ชิ้น"; }
+            else if (parcels >= 11 && parcels <= 15) { ratePerParcel = 1.41; stepLabel = "11 - 15 ชิ้น"; }
+            else if (parcels >= 16 && parcels <= 20) { ratePerParcel = 1.37; stepLabel = "16 - 20 ชิ้น"; }
+            else if (parcels >= 21 && parcels <= 25) { ratePerParcel = 1.29; stepLabel = "21 - 25 ชิ้น"; }
+            else if (parcels >= 26 && parcels <= 30) { ratePerParcel = 1.25; stepLabel = "26 - 30 ชิ้น"; }
+            else if (parcels >= 31 && parcels <= 40) { ratePerParcel = 1.09; stepLabel = "31 - 40 ชิ้น"; }
+            else if (parcels >= 41 && parcels <= 50) { ratePerParcel = 0.97; stepLabel = "41 - 50 ชิ้น"; }
+            else if (parcels >= 51 && parcels <= 75) { ratePerParcel = 0.89; stepLabel = "51 - 75 ชิ้น"; }
+            else if (parcels >= 76 && parcels <= 100) { ratePerParcel = 0.69; stepLabel = "76 - 100 ชิ้น"; }
+            else if (parcels >= 101 && parcels <= 200) { ratePerParcel = 0.58; stepLabel = "101 - 200 ชิ้น"; }
+            else if (parcels >= 201 && parcels <= 300) { ratePerParcel = 0.55; stepLabel = "201 - 300 ชิ้น"; }
+            else if (parcels >= 301 && parcels <= 400) { ratePerParcel = 0.48; stepLabel = "301 - 400 ชิ้น"; }
+            else if (parcels >= 401 && parcels <= 500) { ratePerParcel = 0.44; stepLabel = "401 - 500 ชิ้น"; }
+            else if (parcels >= 501 && parcels <= 1000) { ratePerParcel = 0.39; stepLabel = "501 - 1,000 ชิ้น"; }
+            else if (parcels >= 1001 && parcels <= 2000) { ratePerParcel = 0.29; stepLabel = "1,001 - 2,000 ชิ้น"; }
+            else if (parcels >= 2001 && parcels <= 3000) { ratePerParcel = 0.15; stepLabel = "2,001 - 3,000 ชิ้น"; }
+            else if (parcels >= 3001 && parcels <= 4000) { ratePerParcel = 0.15; stepLabel = "3,001 - 4,000 ชิ้น"; }
+            else if (parcels >= 4001 && parcels <= 5000) { ratePerParcel = 0.15; stepLabel = "4,001 - 5,000 ชิ้น"; }
+            else if (parcels >= 5001) { ratePerParcel = 0.15; stepLabel = "5,001 ชิ้นขึ้นไป"; }
+
+            let grossIncome = parcels * ratePerParcel;
+            let deductAmount = deductCount * 2.5; // คิดอัตราหัก 2.5 บาท สำหรับ 4W
+            let netIncome = Math.max(0, grossIncome - deductAmount);
+
+            let breakdownHtml = `
+                <p>• <strong>จำนวนพัสดุสำเร็จ:</strong> ${parcels} ชิ้น</p>
+                <p>• <strong>ช่วงจำนวน (Step size):</strong> ตกอยู่ตารางขั้น ${stepLabel}</p>
+                <p>• <strong>เรทจ่ายโครงสร้างใหม่:</strong> ชิ้นละ ${ratePerParcel} บาท</p>
+                <p class="text-blue-600 font-semibold">• <strong>สูตรคำนวณค่ากล่อง:</strong> ${ratePerParcel} × ${parcels} ชิ้น = ${grossIncome.toFixed(2)} บาท</p>
+                <p class="text-red-500 font-semibold">• <strong>หักงานซ้ำ Same Address:</strong> ${deductCount} ชิ้น × 2.5 บาท = -${deductAmount.toFixed(2)} บาท</p>
+                <p class="text-green-600 font-bold border-t pt-2 mt-1 text-sm text-right">สุทธิที่ได้รับจริง: ${netIncome.toFixed(2)} บาท</p>
+            `;
+
+            document.getElementById('grossIncome').innerText = grossIncome.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('deductAmount').innerText = deductAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('netIncome').innerText = netTotal = netIncome.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('breakdownText').innerHTML = breakdownHtml;
+            document.getElementById('resultContainer').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
