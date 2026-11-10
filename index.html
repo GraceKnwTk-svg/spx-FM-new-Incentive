@@ -3,122 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPX FM Payout Calculator (โครงสร้างใหม่)</title>
+    <title>SPX FM Payout Calculator (เรทตามออเดอร์)</title>
     <link href="https://cloudflare.com" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card { border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .bg-orange { background-color: #e65100; color: white; }
         .text-orange { color: #e65100; }
-        .table-responsive { background: white; border-radius: 8px; padding: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
+<div class="container py-4" style="max-width: 600px;">
     <!-- หัวข้อโปรแกรม -->
     <div class="card bg-orange text-center p-3 mb-4">
-        <h2 class="mb-1">📦 ระบบคำนวณค่าตอบแทน FM รูปแบบใหม่ #By Sup Grace</h2>
-        <small>คำนวณเปรียบเทียบตามโครงสร้างใหม่ (อัตราต่อชิ้น VS ค่าการันตีขั้นต่ำต่อ Stop) เลือกยอดที่สูงกว่าจ่ายให้คนขับ</small>
+        <h3 class="mb-1">📦 ระบบคำนวณเงินตามออเดอร์ FM</h3>
+        <small>โครงสร้างใหม่ (เปรียบเทียบ ยอดชิ้น x เรท กับ ค่าตอบแทนขั้นต่ำ)</small>
     </div>
 
-    <div class="row g-4">
-        <!-- ช่องที่ 1: ยอดวิ่งตามขั้นบันได -->
-        <div class="col-md-4">
-            <div class="card p-4 h-100">
-                <h4 class="mb-3 text-orange">🛒 1. ยอดวิ่งตามขั้นบันได</h4>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">ระดับ Tier ของคิวรถ:</label>
-                    <select id="tierSelect" class="form-select">
-                        <option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option><option value="T4">T4</option>
-                        <option value="T5" selected>T5</option>
-                        <option value="T6">T6</option><option value="T7">T7</option><option value="T8">T8</option><option value="T9">T9</option><option value="T10">T10</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">ชื่อร้านค้า / รหัส Stop:</label>
-                    <input type="text" id="stopName" class="form-control" placeholder="เช่น ร้าน A, จุดที่ 1">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">จำนวนพัสดุใน Stop (ชิ้น) *:</label>
-                    <input type="number" id="parcels" class="form-control" value="1" min="1">
-                </div>
-                <button onclick="calculatePayout()" class="btn btn-success w-100 py-2 font-weight-bold">คำนวณและบันทึกข้อมูล</button>
-            </div>
+    <!-- ช่องที่ 1: กรอกยอดออเดอร์ตามขั้นบันได -->
+    <div class="card p-4 mb-4">
+        <h4 class="mb-3 text-orange">🛒 1. ยอดวิ่งตามขั้นบันได</h4>
+        <div class="mb-3">
+            <label class="form-label fw-bold">ระดับ Tier ของคิวรถ:</label>
+            <select id="tierSelect" class="form-select" onchange="calculatePayout()">
+                <option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option><option value="T4">T4</option>
+                <option value="T5" selected>T5</option>
+                <option value="T6">T6</option><option value="T7">T7</option><option value="T8">T8</option><option value="T9">T9</option><option value="T10">T10</option>
+            </select>
         </div>
-
-        <!-- ช่องที่ 2: เรทเงินตามออเดอร์ -->
-        <div class="col-md-8">
-            <div class="card p-4 h-100">
-                <h4 class="mb-3 text-secondary">💰 2. เรทเงินตามออเดอร์ (จุดล่าสุด)</h4>
-                <div class="row text-center my-auto">
-                    <div class="col-6 mb-3">
-                        <div class="p-3 border rounded bg-light">
-                            <small class="text-muted d-block fw-bold">เรทราคาพัสดุต่อชิ้น</small>
-                            <span id="rateVal" class="fs-4 fw-bold text-dark">-</span>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="p-3 border rounded bg-light">
-                            <small class="text-muted d-block fw-bold">คำนวณตามจริง (ชิ้น x เรท)</small>
-                            <span id="calcVal" class="fs-4 fw-bold text-dark">-</span>
-                        </div>
-                    </div>
-                    <div class="col-12 mb-3">
-                        <div class="p-3 border rounded bg-light">
-                            <small class="text-muted d-block fw-bold">ค่าตอบแทนขั้นต่ำการันตีของจุดนี้</small>
-                            <span id="minVal" class="fs-4 fw-bold text-danger">-</span>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="p-3 border rounded bg-success bg-opacity-10 border-success">
-                            <h5 class="text-success mb-1 fw-bold">ยอดสุทธิที่ระบบเลือกจ่าย (ค่าที่สูงกว่า)</h5>
-                            <span id="finalVal" class="fs-2 fw-bold text-success">-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">จำนวนพัสดุ / ออเดอร์ (ชิ้น):</label>
+            <input type="number" id="parcels" class="form-control form-control-lg" value="1" min="1" oninput="calculatePayout()">
         </div>
     </div>
 
-    <!-- ช่องที่ 3: รวมเงินที่ได้ (สะสมรอบคิวงาน) -->
-    <div class="card p-4 mt-4">
-        <h4 class="mb-3 text-orange">📊 3. รวมเงินที่ได้ (สะสมรอบคิวงาน)</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped text-center align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>รหัส Stop/ร้าน</th>
-                        <th>ระดับ Tier</th>
-                        <th>พัสดุรวม (ชิ้น)</th>
-                        <th>เรทต่อชิ้น</th>
-                        <th>คำนวณชิ้น (บาท)</th>
-                        <th>ยอดขั้นต่ำ (บาท)</th>
-                        <th>จ่ายสุทธิ (บาท)</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td colspan="7" class="text-muted py-3">ยังไม่มีข้อมูลสะสม กรุณากรอกข้อมูลเพื่อคำนวณด้านบน</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- แผงสรุปรวมสะสมท้ายสุด -->
-        <div id="summaryPanel" class="alert alert-secondary mt-3 mb-0 text-center fw-bold fs-5" style="display:none;">
-            🚩 สรุปยอดรวมคิวรถรอบนี้ -> วิ่งไป: <span id="totalStops" class="text-primary">0</span> Stops | 
-            พัสดุสะสมรวม: <span id="totalParcels" class="text-primary">0</span> ชิ้น | 
-            <span class="text-success">เงินรวมทั้งหมด: <span id="totalMoney">0.00</span> บาท</span>
-            <div class="mt-2">
-                <button onclick="clearAll()" class="btn btn-sm btn-danger">ล้างตารางเพื่อเริ่มคิวใหม่</button>
+    <!-- ช่องที่ 2: เรทเงินและยอดเงินรวมที่ได้รับตามออเดอร์ -->
+    <div class="card p-4">
+        <h4 class="mb-3 text-secondary">💰 2. เรทเงินและรวมเงินที่ได้ตามออเดอร์</h4>
+        <div class="row text-center">
+            <div class="col-6 mb-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block fw-bold">เรทราคาต่อชิ้น</small>
+                    <span id="rateVal" class="fs-4 fw-bold text-dark">-</span>
+                </div>
+            </div>
+            <div class="col-6 mb-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block fw-bold">คำนวณจริง (ชิ้น x เรท)</small>
+                    <span id="calcVal" class="fs-4 fw-bold text-dark">-</span>
+                </div>
+            </div>
+            <div class="col-12 mb-3">
+                <div class="p-3 border rounded bg-light">
+                    <small class="text-muted d-block fw-bold">ค่าตอบแทนขั้นต่ำการันตี</small>
+                    <span id="minVal" class="fs-4 fw-bold text-danger">-</span>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="p-3 border rounded bg-success bg-opacity-10 border-success">
+                    <h5 class="text-success mb-1 fw-bold">รวมเงินที่ได้สุทธิ (เลือกยอดที่สูงกว่า)</h5>
+                    <span id="finalVal" class="fs-2 fw-bold text-success">-</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// ข้อมูลเรทราคาต่อชิ้นฝั่งซ้าย (T1 ถึง T10)
+// ข้อมูลเรทราคาต่อชิ้น (T1 ถึง T10)
 const PRICING_DATA = {
     T1: [1.41,1.37,1.26,1.25,1.00,0.97,0.69,0.69,0.55,0.48,0.44,0.39,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
     T2: [1.58,1.54,1.38,1.33,1.07,1.01,0.74,0.75,0.58,0.49,0.47,0.40,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
@@ -132,21 +85,21 @@ const PRICING_DATA = {
     T10:[4.41,4.28,3.63,3.19,2.50,2.21,1.66,1.61,1.18,0.83,0.69,0.69,0.49,0.25,0.21,0.21,0.21,0.21,0.21]
 };
 
-// แก้ไขข้อมูลค่าการันตีขั้นต่ำฝั่งขวา (Guaranteed Minimum Payout per stop) ครบถ้วน 100% แล้ว
+// ข้อมูลค่าตอบแทนขั้นต่ำการันตี (อ้างอิงตารางฝั่งขวา)
 const MIN_GUARANTEED_DATA = {
-    T1: [6,16,22,27,32,37,40,48,52,69,110,143,177,195,351,400,450,600,750],
-    T2: [7,17,25,31,35,40,43,51,57,75,115,146,187,202,351,400,450,600,750],
-    T3: [10,19,28,35,39,44,46,55,62,81,125,150,192,215,377,420,510,680,850],
-    T4: [13,21,30,38,43,48,50,60,66,86,135,154,197,234,390,420,510,680,850],
-    T5: [14,23,32,40,48,51,58,64,76,92,140,165,212,254,390,440,540,720,900],
-    T6: [22,30,41,51,56,59,64,74,79,104,158,180,226,273,403,440,540,720,900],
-    T7: [29,37,50,60,65,69,73,83,87,115,173,199,241,299,429,460,540,720,900],
-    T8: [36,41,56,68,73,80,82,92,97,127,188,210,256,319,442,460,600,800,1000],
-    T9: [43,49,66,77,82,88,91,101,105,138,203,225,271,338,455,500,600,800,1000],
+    T1:,
+    T2:,
+    T3:,
+    T4:,
+    T5:,
+    T6:,
+    T7:,
+    T8:,
+    T9:,
     T10:[47,49,68,86,91,96,100,110,124,161,235,248,276,345,494,500,630,840,1050]
 };
 
-// เกณฑ์ขั้นบันได Stop Size
+// ช่วงเกณฑ์ขั้นบันได (Stop size)
 const BINS = [
     {min:1, max:10}, {min:11, max:15}, {min:16, max:20}, {min:21, max:25}, {min:26, max:30},
     {min:31, max:40}, {min:41, max:50}, {min:51, max:75}, {min:76, max:100}, {min:101, max:200},
@@ -154,21 +107,21 @@ const BINS = [
     {min:1001, max:2000}, {min:2001, max:3000}, {min:3001, max:4000}, {min:4001, max:5000}, {min:5001, max:10000}
 ];
 
-let historyData = [];
-
 function calculatePayout() {
     const tier = document.getElementById("tierSelect").value;
-    const stopNameInput = document.getElementById("stopName").value.trim();
     const parcels = parseInt(document.getElementById("parcels").value);
 
     if (isNaN(parcels) || parcels <= 0) {
-        alert("กรุณากรอกจำนวนพัสดุให้ถูกต้อง (ต้องเป็นตัวเลขมากกว่า 0)");
+        document.getElementById("rateVal").innerText = "-";
+        document.getElementById("calcVal").innerText = "-";
+        document.getElementById("minVal").innerText = "-";
+        document.getElementById("finalVal").innerText = "-";
         return;
     }
 
     let idx = BINS.findIndex(b => parcels >= b.min && parcels <= b.max);
     if (idx === -1) {
-        alert("จำนวนพัสดุเกินขอบเขตตารางขั้นบันได (สูงสุด 10,000 ชิ้น)");
+        alert("จำนวนพัสดุเกินขอบเขตตาราง (สูงสุด 10,000 ชิ้น)");
         return;
     }
 
@@ -176,17 +129,18 @@ function calculatePayout() {
     const minGuaranteed = MIN_GUARANTEED_DATA[tier][idx];
     const calcPay = parcels * rate;
     const finalPay = Math.max(calcPay, minGuaranteed);
-    const label = stopNameInput !== "" ? stopNameInput : `Stop ที่ ${historyData.length + 1}`;
 
-    // แสดงค่าในช่องที่ 2
+    // แสดงผลตัวเลขทันที
     document.getElementById("rateVal").innerText = rate.toFixed(2) + " บาท";
     document.getElementById("calcVal").innerText = calcPay.toFixed(2) + " บาท";
     document.getElementById("minVal").innerText = minGuaranteed.toFixed(2) + " บาท";
-    document.getElementById("finalVal").innerText = finalPay.toFixed(2) + " บาท";
+    document.getElementById("finalVal").innerText = finalPay.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท";
+}
 
-    // บันทึกลงในช่องที่ 3 (ตารางสะสม)
-    historyData.push({ label, tier, parcels, rate, calcPay, minGuaranteed, finalPay });
-    updateTable();
-
-    // ล้างช่องป้อนข้อมูล
-    document.getElementById("stopName").value = "";
+// เรียกให้คำนวณทันทีเมื่อเปิดหน้าเว็บครั้งแรก
+window.onload = function() {
+    calculatePayout();
+};
+</script>
+</body>
+</html>
