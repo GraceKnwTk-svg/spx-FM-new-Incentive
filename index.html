@@ -31,7 +31,6 @@
                 <div class="mb-3">
                     <label class="form-label">เลือกระดับ Tier:</label>
                     <select id="tierSelect" class="form-select">
-                        <!-- ตัวเลือก T1 ถึง T10 โดยเปิดค่าเริ่มต้นไว้ที่ T5 -->
                         <option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option><option value="T4">T4</option>
                         <option value="T5" selected>T5</option>
                         <option value="T6">T6</option><option value="T7">T7</option><option value="T8">T8</option><option value="T9">T9</option><option value="T10">T10</option>
@@ -123,7 +122,7 @@
 </div>
 
 <script>
-// ข้อมูลโครงสร้างแบบใหม่ทั้งหมดตามภาพที่ 1 (T1 ถึง T10)
+// 1. ข้อมูลเรทราคาต่อชิ้นโครงสร้างแบบใหม่ (T1 ถึง T10)
 const PRICING_DATA = {
     T1: [1.41,1.37,1.26,1.25,1.00,0.97,0.69,0.69,0.55,0.48,0.44,0.39,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
     T2: [1.58,1.54,1.38,1.33,1.07,1.01,0.74,0.75,0.58,0.49,0.47,0.40,0.35,0.20,0.15,0.15,0.15,0.15,0.15],
@@ -137,6 +136,7 @@ const PRICING_DATA = {
     T10:[4.41,4.28,3.63,3.19,2.50,2.21,1.66,1.61,1.18,0.83,0.69,0.69,0.49,0.25,0.21,0.21,0.21,0.21,0.21]
 };
 
+// 2. ข้อมูลค่าตอบแทนการันตีขั้นต่ำต่อ Stop (Guaranteed Minimum payout per stop)
 const MIN_GUARANTEED_DATA = {
     T1:,
     T2:,
@@ -147,9 +147,10 @@ const MIN_GUARANTEED_DATA = {
     T7:,
     T8:,
     T9:,
-    T10:[47,49,68,86,91,96,100,110,124,161,235,248,276,345,494,500,630,840,1050]
+    T10:[47,49,68,86,91,96,110,124,161,235,248,276,345,494,500,630,840,840,1050]
 };
 
+// ช่วงเกณฑ์การจัดขนาดพัสดุ (Stop size)
 const BINS = [
     {min:1, max:10}, {min:11, max:15}, {min:16, max:20}, {min:21, max:25}, {min:26, max:30},
     {min:31, max:40}, {min:41, max:50}, {min:51, max:75}, {min:76, max:100}, {min:101, max:200},
@@ -198,4 +199,3 @@ function calculatePayout() {
 
 function updateTable() {
     const tbody = document.getElementById("tableBody");
-    if (historyData.length === 0) {
